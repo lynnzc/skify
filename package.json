@@ -1,5 +1,5 @@
 {
-  "name": "skit",
+  "name": "skify",
   "version": "0.1.0",
   "description": "Self-hosted Agent Skills Registry",
   "type": "module",
@@ -9,9 +9,9 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "cli": "pnpm --filter @skit/cli",
-    "worker": "pnpm --filter @skit/worker",
-    "web": "pnpm --filter @skit/web"
+    "cli": "pnpm --filter @skify/cli",
+    "worker": "pnpm --filter @skify/worker",
+    "web": "pnpm --filter @skify/web"
   },
   "devDependencies": {
     "turbo": "^2.3.0",

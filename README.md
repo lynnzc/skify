@@ -1,115 +1,202 @@
-# skit
+<p align="center">
+  <h1 align="center">skify</h1>
+  <p align="center">
+    <strong>Self-Hosted Agent Skills Registry</strong>
+    <br/>
+    Deploy your own private skill management platform for AI coding agents
+  </p>
+</p>
 
-**Agent Skills Kit** - Install and manage skills for AI coding agents
+<p align="center">
+  <a href="https://www.npmjs.com/package/@skify/cli"><img src="https://img.shields.io/npm/v/@skify/cli.svg" alt="npm version"></a>
+  <a href="https://github.com/lynnzc/skify/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D20.6.0-brightgreen.svg" alt="Node.js"></a>
+</p>
+
+---
+
+**skify** is a private skill registry you can deploy in minutes. Host your own skill packages for AI coding agents — keep proprietary workflows private, ensure team consistency, and maintain full control.
 
 ```bash
-npx skit add anthropics/skills/pdf
+# Deploy to Cloudflare (free tier)
+cd deploy/cloudflare && bash deploy.sh
+
+# Or self-host with Docker
+cd deploy/docker && bash deploy.sh
 ```
 
-## Features
+## Why skify?
 
-- 🔍 **Search** - Find skill repos on GitHub with `topic:agent-skills`
-- 📦 **Install** - Install skills from any GitHub repository
-- 🔄 **Update** - Track versions and update with one command
-- 📋 **Sync** - Generate `AGENTS.md` for AI agents to read
-- 🌐 **Web UI** - Browse and search skills visually
+AI coding agents need domain-specific knowledge. Skills provide reusable instructions, templates, and workflows — but public repositories aren't always an option.
 
-Compatible with Cursor, Claude Code, GitHub Copilot, Codex, and more.
+**skify gives you:**
 
-## Quick Start
+| | |
+|---|---|
+| **🔒 Private by default** | Your skills stay in your infrastructure |
+| **⚡ One-click deploy** | Cloudflare Workers (free) or Docker |
+| **📦 Full registry** | Publish, version, search, and install skills |
+| **🛠️ CLI included** | `npx skify add/publish/sync` |
+| **🌐 Web UI** | Browse and search skills visually |
+
+## Table of Contents
+
+- [Quick Deploy](#quick-deploy)
+- [CLI Usage](#cli-usage)
+- [How It Works](#how-it-works)
+- [Creating Skills](#creating-skills)
+- [Architecture](#architecture)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Quick Deploy
+
+### Option 1: Cloudflare Workers (Recommended)
+
+Free tier, global edge, zero server management.
 
 ```bash
-# Search for skills
-npx skit search "react"
-
-# List skills in a repo
-npx skit list anthropics/skills
-
-# Install a skill
-npx skit add anthropics/skills/pdf
-
-# Generate AGENTS.md
-npx skit sync
+cd deploy/cloudflare
+bash deploy.sh
 ```
 
-## Commands
+The script will:
+1. Create D1 database and R2 storage
+2. Deploy the Worker
+3. Generate and display your API token
+
+```
+✓ Deployed to https://skify-api.your-account.workers.dev
+✓ API Token: sk_xxxxxxxxxxxx
+```
+
+### Option 2: Docker (Self-Hosted)
+
+Full control, runs anywhere, air-gapped support.
+
+```bash
+cd deploy/docker
+bash deploy.sh
+```
+
+Or with docker-compose:
+
+```bash
+cd deploy/docker
+docker-compose up -d
+```
+
+### Configure CLI
+
+After deployment, point the CLI to your registry:
+
+```bash
+skify config set registry https://your-registry-url
+skify config set token <your-api-token>
+```
+
+## CLI Usage
+
+### Install CLI
+
+```bash
+# Run directly with npx
+npx skify <command>
+
+# Or install globally
+npm install -g @skify/cli
+```
+
+### Commands
 
 | Command | Description |
 |---------|-------------|
-| `skit search <query>` | Search for skill repos on GitHub |
-| `skit list [repo]` | List skills in a repo, or list installed skills |
-| `skit add <source>` | Install skill (`owner/repo/skill` or `owner/repo`) |
-| `skit update [name]` | Update skills (all or specific) |
-| `skit read <name>` | Read skill content (for agent invocation) |
-| `skit remove <name>` | Remove a skill |
-| `skit sync` | Generate AGENTS.md |
-| `skit config` | Manage configuration |
+| `skify add <skill>` | Install a skill |
+| `skify remove <name>` | Remove a skill |
+| `skify list` | List installed skills |
+| `skify update [name]` | Update skills |
+| `skify sync` | Generate AGENTS.md |
+| `skify publish <dir>` | Publish skill to registry |
+| `skify search <query>` | Search for skills |
+| `skify read <name>` | Output skill content |
+| `skify config` | Manage configuration |
 
-### Options
+### Examples
 
 ```bash
-# Install globally (~/.agent/skills/)
-skit add anthropics/skills/pdf -g
+# Publish a skill to your registry
+skify publish ./my-skill
 
-# Specify agent directory
-skit add anthropics/skills/pdf --agent cursor  # .cursor/skills/
-skit add anthropics/skills/pdf --agent claude  # .claude/skills/
+# Install from your registry
+skify add my-skill
 
-# Use GitHub token (for private repos or higher API limits)
-skit add myorg/private-skills/internal --token ghp_xxx
+# Install from GitHub (public or private with token)
+skify add owner/repo/skill-name
+skify add owner/repo/skill-name --token ghp_xxx
 
-# Or configure global token
-skit config set token ghp_xxx
+# Install to specific agent directory
+skify add my-skill --agent cursor   # .cursor/skills/
+skify add my-skill --agent claude   # .claude/skills/
+
+# Generate AGENTS.md for AI agents
+skify sync
 ```
 
-## File Structure
+## How It Works
 
-After installation:
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  1. DEPLOY                                                          │
+│                                                                     │
+│     bash deploy.sh  ──►  Your Private Registry                     │
+│                          (Cloudflare or Docker)                     │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  2. PUBLISH                                                         │
+│                                                                     │
+│     skify publish ./my-skill  ──►  Registry stores skill           │
+│                                    with version tracking            │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  3. INSTALL                                                         │
+│                                                                     │
+│     skify add my-skill  ──►  Downloads to .agent/skills/           │
+│     skify sync          ──►  Generates AGENTS.md                   │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  4. USE                                                             │
+│                                                                     │
+│     AI Agent reads AGENTS.md                                        │
+│     ↓                                                               │
+│     Sees available skills                                           │
+│     ↓                                                               │
+│     Runs: npx skify read my-skill                                  │
+│     ↓                                                               │
+│     Receives instructions and executes                              │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Project Structure After Install
 
 ```
 your-project/
 ├── .agent/
 │   ├── skills/
-│   │   ├── pdf/
+│   │   ├── my-skill/
 │   │   │   ├── SKILL.md
-│   │   │   └── ...
-│   │   └── remotion/
+│   │   │   └── templates/
+│   │   └── another-skill/
 │   │       └── SKILL.md
-│   └── skit.lock.json    # Version tracking
-├── AGENTS.md             # Skill manifest for AI agents
+│   └── skify.lock.json
+├── AGENTS.md              # Auto-generated skill manifest
 └── ...
-```
-
-## How Agents Use Skills
-
-### Setup
-
-```bash
-# 1. Install skills
-skit add anthropics/skills/canvas-design
-
-# 2. Generate AGENTS.md
-skit sync
-```
-
-### Agent Workflow
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Agent reads AGENTS.md on startup                           │
-│  ↓                                                          │
-│  Sees available skills:                                     │
-│    - canvas-design: "Create visual art..."                  │
-│    - pdf: "PDF manipulation toolkit..."                     │
-│  ↓                                                          │
-│  User: "Create a poster for my event"                       │
-│  ↓                                                          │
-│  Agent runs: npx skit read canvas-design                    │
-│  ↓                                                          │
-│  Agent receives full instructions + BASE_DIR for resources  │
-│  ↓                                                          │
-│  Agent executes the skill                                   │
-└─────────────────────────────────────────────────────────────┘
 ```
 
 ### AGENTS.md Format
@@ -117,199 +204,183 @@ skit sync
 ```xml
 <skills_system priority="1">
 <usage>
-How to use skills:
-- Invoke: `npx skit read <skill-name>` (run in your shell)
-- The skill content will load with detailed instructions
-- Base directory provided in output for resolving bundled resources
+Invoke skills: `npx skify read <skill-name>`
 </usage>
 
 <available_skills>
 <skill>
-  <name>canvas-design</name>
-  <description>Create beautiful visual art...</description>
-  <location>project</location>
+  <name>my-skill</name>
+  <description>What this skill does</description>
 </skill>
 </available_skills>
 </skills_system>
 ```
 
-### Agent-Specific Directories
+## Creating Skills
 
-```bash
-# Cursor
-skit add anthropics/skills/pdf --agent cursor
-# → .cursor/skills/pdf/
+### Skill Structure
 
-# Claude Code  
-skit add anthropics/skills/pdf --agent claude
-# → .claude/skills/pdf/
-
-# Default (any agent)
-skit add anthropics/skills/pdf
-# → .agent/skills/pdf/
+```
+my-skill/
+├── SKILL.md           # Required: Instructions for the agent
+├── templates/         # Optional: Template files
+├── examples/          # Optional: Example code
+└── resources/         # Optional: Other resources
 ```
 
-## Using Private Skills
+### SKILL.md Format
 
-### Option 1: Private GitHub Repo
+```markdown
+---
+name: my-skill
+description: Brief description of what this skill does
+version: 1.0.0
+---
 
-```bash
-# Fork to your org, modify, then install with token
-skit add myorg/skills/custom-skill --token ghp_xxx
+# My Skill
 
-# Or set token globally
-skit config set githubToken ghp_xxx
-skit add myorg/skills/custom-skill
+Instructions for the AI agent.
+
+## When to Use
+
+Describe when this skill applies.
+
+## How to Use
+
+Step-by-step instructions.
 ```
 
-### Option 2: Private Registry
+### Publish to Your Registry
 
 ```bash
-# Deploy your registry (Cloudflare or Docker)
-cd deploy/cloudflare && bash deploy.sh
+# Set up registry (one time)
+skify config set registry https://your-registry
+skify config set token <token>
 
-# Configure CLI
-skit config set registry https://skills.company.com
-skit config set token <api-token>
+# Publish
+cd my-skill
+skify publish .
 
-# Publish local skill
-skit publish ./my-skill
-
-# Install by name
-skit add my-skill
+# Version updates
+# Edit SKILL.md, bump version, publish again
+skify publish .
 ```
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         skify Registry                              │
+│                                                                     │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐            │
+│  │   REST API  │    │   Storage   │    │  Database   │            │
+│  │             │    │             │    │             │            │
+│  │ - publish   │    │ Cloudflare: │    │ Cloudflare: │            │
+│  │ - download  │    │   R2        │    │   D1        │            │
+│  │ - search    │    │             │    │             │            │
+│  │ - list      │    │ Docker:     │    │ Docker:     │            │
+│  │             │    │   Filesystem│    │   SQLite    │            │
+│  └─────────────┘    └─────────────┘    └─────────────┘            │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                         skify CLI                                   │
+│                                                                     │
+│  @skify/cli                                                         │
+│  ├── add/remove/update     # Manage installed skills               │
+│  ├── publish               # Upload to registry                    │
+│  ├── search/list           # Discover skills                       │
+│  ├── sync                  # Generate AGENTS.md                    │
+│  └── read                  # Output skill for agent                │
+│                                                                     │
+│  @skify/core                                                        │
+│  ├── GitHub API            # Fetch from GitHub repos               │
+│  └── Parser                # Parse SKILL.md files                  │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                         skify Web UI                                │
+│                                                                     │
+│  Browse, search, and preview skills in your browser                │
+│  Deploy alongside registry or standalone                            │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Deployment Comparison
+
+| | Cloudflare | Docker |
+|---|---|---|
+| **Setup** | One script | One script |
+| **Cost** | Free tier (100k req/day) | Your infrastructure |
+| **Scaling** | Automatic, global edge | Manual |
+| **Storage** | R2 (S3-compatible) | Filesystem |
+| **Database** | D1 (SQLite) | SQLite |
+| **Best for** | Most users | Air-gapped, on-premise |
 
 ## Development
 
-### Requirements
+### Prerequisites
 
 - Node.js >= 20.6.0
 - pnpm >= 9.0.0
 
-### Local Development
+### Setup
 
 ```bash
-# Clone the repo
-git clone https://github.com/lynnzc/skit.git
-cd skit
-
-# Install dependencies
+git clone https://github.com/lynnzc/skify.git
+cd skify
 pnpm install
-
-# Build all packages
 pnpm build
-
-# Link CLI globally (for local testing)
-cd packages/cli && npm link
-
-# Test CLI
-skit --help
-skit search "agent skills"
 ```
 
 ### Project Structure
 
 ```
-skit/
+skify/
 ├── packages/
-│   ├── core/       # Core library (parsing, GitHub API)
+│   ├── core/       # Shared library
 │   ├── cli/        # CLI tool
 │   ├── web/        # Web UI
-│   └── worker/     # Cloudflare Worker API
-└── deploy/
-    ├── cloudflare/ # Cloudflare deployment scripts
-    └── docker/     # Docker deployment config
+│   └── worker/     # Cloudflare Worker
+├── deploy/
+│   ├── cloudflare/ # CF deployment script
+│   └── docker/     # Docker deployment
+└── scripts/
 ```
 
-### Testing
+### Local Development
 
 ```bash
-# Test CLI commands
-cd packages/cli
-pnpm build
-node dist/index.js search "pdf"
-node dist/index.js list anthropics/skills
-node dist/index.js add anthropics/skills/pdf
-node dist/index.js list
-node dist/index.js read pdf
-node dist/index.js update
-node dist/index.js sync
-node dist/index.js remove pdf
+# CLI
+cd packages/cli && npm link
+skify --help
+
+# Web UI
+pnpm --filter @skify/web dev
+# http://localhost:5173
+
+# Worker (local)
+pnpm --filter @skify/worker dev
 ```
 
-### Running Web UI
+## Compatible Agents
 
-```bash
-pnpm --filter @skit/web dev
-# Open http://localhost:5173
-```
+Works with any AI coding agent that can read markdown and run shell commands:
 
-The Web UI uses GitHub API mode by default, no backend required.
+- Cursor
+- Claude Code
+- GitHub Copilot
+- Codex
+- Windsurf
+- And more...
 
-## Publishing
+## Contributing
 
-### Publish to npm
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a Pull Request
 
-```bash
-# 1. Update version
-cd packages/cli
-npm version patch  # or minor, major
+## License
 
-# 2. Build
-pnpm build
-
-# 3. Publish
-npm publish --access public
-```
-
-After publishing, users can run:
-
-```bash
-npx skit add anthropics/skills/pdf
-```
-
-### Deploy Private Registry
-
-For internal company skill repositories:
-
-**Cloudflare (recommended, free tier):**
-
-```bash
-cd deploy/cloudflare
-bash deploy.sh
-```
-
-**Docker:**
-
-```bash
-cd deploy/docker
-bash deploy.sh
-```
-
-Both scripts will:
-- Create required resources (database, storage)
-- Generate and display an API token
-- Deploy the service
-
-After deployment, configure CLI:
-
-```bash
-skit config set registry https://your-api-endpoint
-skit config set token <your-api-token>
-```
-
-## Configuration
-
-Config file location: `~/.config/skit-nodejs/config.json`
-
-```bash
-# View config
-skit config get
-
-# Set GitHub token (for GitHub API access)
-skit config set token ghp_xxx
-
-# Set private registry
-skit config set registry https://skills.company.com
-```
-
+Apache License 2.0 — see [LICENSE](LICENSE)

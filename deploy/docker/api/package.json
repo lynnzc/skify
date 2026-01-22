@@ -1,5 +1,5 @@
 {
-  "name": "skit-api-docker",
+  "name": "skify-api-docker",
   "type": "module",
   "scripts": {
     "start": "tsx index.ts"

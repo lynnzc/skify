@@ -12,6 +12,7 @@ dist/
 # Environment
 .env
 .env.local
+.npmrc
 
 # OS
 .DS_Store
@@ -27,5 +28,5 @@ AGENTS.md
 .pnpm-store/
 
 # Lock file (uncomment to commit, locking skill versions for team)
-# skit.lock.json
+# skify.lock.json
 

@@ -1,16 +1,17 @@
 {
-  "name": "@skit/cli",
-  "version": "0.1.0",
+  "name": "@skify/cli",
+  "version": "0.1.1",
   "type": "module",
+  "files": ["dist"],
   "bin": {
-    "skit": "./dist/index.js"
+    "skify": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts",
     "dev": "tsup src/index.ts --format esm --watch"
   },
   "dependencies": {
-    "@skit/core": "workspace:*",
+    "@skify/core": "workspace:*",
     "commander": "^12.1.0",
     "picocolors": "^1.1.0",
     "ora": "^8.1.0",

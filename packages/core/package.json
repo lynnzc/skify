@@ -1,7 +1,10 @@
 {
-  "name": "@skit/core",
-  "version": "0.1.0",
+  "name": "@skify/core",
+  "version": "0.1.9",
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

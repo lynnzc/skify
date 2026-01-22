@@ -67,7 +67,7 @@ export default function App() {
 
   function copyInstallCmd() {
     if (!selected) return;
-    const cmd = `npx skit add ${selected.owner}/${selected.repo}/${selected.name}`;
+    const cmd = `npx skify add ${selected.owner}/${selected.repo}/${selected.name}`;
     navigator.clipboard.writeText(cmd);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -107,7 +107,7 @@ export default function App() {
               <path d="M38 2L22 22H32L26 38L44 26H36L38 2Z" fill="url(#bolt-highlight)"/>
               <path d="M36 8L34 24" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.7"/>
             </svg>
-            <span>skit</span>
+            <span>skify</span>
           </div>
           
           <div className="search-wrapper">
@@ -222,7 +222,7 @@ export default function App() {
             </div>
             <div className="modal-body">
               <div className="install-cmd">
-                <code>npx skit add {selected.owner}/{selected.repo}/{selected.name}</code>
+                <code>npx skify add {selected.owner}/{selected.repo}/{selected.name}</code>
                 <button className="copy-btn" onClick={copyInstallCmd}>
                   {copied ? '✓ Copied' : 'Copy'}
                 </button>

@@ -10,7 +10,7 @@ interface Config {
 }
 
 const config = new Conf<Config>({
-  projectName: 'skit',
+  projectName: 'skify',
   defaults: {
     defaultTarget: 'project',
   },

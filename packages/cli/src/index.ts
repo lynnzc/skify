@@ -11,7 +11,7 @@ import {
   downloadSkillFiles,
   generateAgentsMd,
   parseSkillMd,
-} from '@skit/core';
+} from '@skify/core';
 import { getConfig, setConfig, getTargetDir } from './config.js';
 import { recordInstall, removeFromLock, getAllInstalled } from './lockfile.js';
 
@@ -42,7 +42,7 @@ async function fetchRegistry(path: string, options: { token?: string } = {}) {
 const program = new Command();
 
 program
-  .name('skit')
+  .name('skify')
   .description('Agent Skills Kit - install & manage AI agent skills')
   .version('0.1.0');
 
@@ -53,7 +53,7 @@ program
   .action(async (options) => {
     const config = getConfig();
     if (!config.registry) {
-      console.log(pc.yellow('No registry configured. Use: skit config set registry <url>'));
+      console.log(pc.yellow('No registry configured. Use: skify config set registry <url>'));
       return;
     }
 
@@ -107,7 +107,7 @@ program
           console.log(`    ${pc.dim(skill.description)}`);
         }
       }
-      console.log(pc.dim(`\nUse ${pc.cyan('skit list <repo>')} to see skills in a repo`));
+      console.log(pc.dim(`\nUse ${pc.cyan('skify list <repo>')} to see skills in a repo`));
     } catch (err) {
       spinner.fail('Search failed');
       console.error(pc.red(String(err)));
@@ -159,7 +159,7 @@ program
       for (const skill of skills) {
         console.log(`  - ${pc.green(skill)}`);
       }
-      console.log(pc.dim(`\nUse ${pc.cyan(`skit add ${repo}/<skill>`)} to install`));
+      console.log(pc.dim(`\nUse ${pc.cyan(`skify add ${repo}/<skill>`)} to install`));
     } catch (err) {
       spinner.fail('Failed to list skills');
       console.error(pc.red(String(err)));
@@ -502,11 +502,11 @@ program
   .action(async (source) => {
     const config = getConfig();
     if (!config.registry) {
-      console.log(pc.yellow('No registry configured. Use: skit config set registry <url>'));
+      console.log(pc.yellow('No registry configured. Use: skify config set registry <url>'));
       process.exit(1);
     }
     if (!config.token) {
-      console.log(pc.yellow('No token configured. Use: skit config set token <token>'));
+      console.log(pc.yellow('No token configured. Use: skify config set token <token>'));
       process.exit(1);
     }
 
@@ -604,7 +604,7 @@ program
       setConfig(key as 'registry' | 'token' | 'githubToken' | 'defaultTarget', value);
       console.log(pc.green(`Set ${key} = ${value}`));
     } else {
-      console.log(pc.yellow('Usage: skit config get [key] | set <key> <value>'));
+      console.log(pc.yellow('Usage: skify config get [key] | set <key> <value>'));
     }
   });
 

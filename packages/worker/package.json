@@ -1,5 +1,5 @@
 {
-  "name": "@skit/worker",
+  "name": "@skify/worker",
   "version": "0.1.0",
   "type": "module",
   "scripts": {

@@ -34,7 +34,7 @@ export function generateAgentsMd(skills: SkillMeta[]): string {
 When users ask you to perform tasks, check if any of the available skills below can help complete the task more effectively.
 
 How to use skills:
-- Invoke: \`npx skit read <skill-name>\` (run in your shell)
+- Invoke: \`npx skify read <skill-name>\` (run in your shell)
 - The skill content will load with detailed instructions
 - Base directory provided in output for resolving bundled resources
 

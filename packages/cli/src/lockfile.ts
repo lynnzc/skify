@@ -1,9 +1,9 @@
 import { readFile, writeFile } from 'fs/promises';
 import { join, dirname } from 'path';
-import type { LockFile, InstalledSkill } from '@skit/core';
+import type { LockFile, InstalledSkill } from '@skify/core';
 import { getTargetDir } from './config.js';
 
-const LOCK_FILE = 'skit.lock.json';
+const LOCK_FILE = 'skify.lock.json';
 
 export async function getLockFilePath(target: 'cursor' | 'claude' | 'project', global: boolean): Promise<string> {
   const skillsDir = dirname(getTargetDir(target, 'dummy', global));

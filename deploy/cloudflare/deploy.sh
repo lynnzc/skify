@@ -17,8 +17,8 @@ fi
 
 cd "$(dirname "$0")/../../packages/worker"
 
-DB_NAME="skit-db"
-BUCKET_NAME="skit-storage"
+DB_NAME="skify-db"
+BUCKET_NAME="skify-storage"
 
 if [ "$DEPLOY_TARGET" = "all" ] || [ "$DEPLOY_TARGET" = "worker" ]; then
     echo "📦 Setting up D1 database..."
@@ -84,7 +84,7 @@ EOF
     pnpm build
 
     echo "🚀 Deploying to Cloudflare Pages..."
-    wrangler pages deploy dist --project-name=skit-web
+    wrangler pages deploy dist --project-name=skify-web
 
     rm -f .env.production
 fi
@@ -114,10 +114,10 @@ echo ""
 if [ -n "$WORKER_URL" ]; then
     echo "API endpoint: $WORKER_URL"
 fi
-echo "Web UI: https://skit-web.pages.dev"
+echo "Web UI: https://skify-web.pages.dev"
 echo ""
 if [ -n "$WORKER_URL" ]; then
     echo "Configure CLI:"
-    echo "  skit config set registry $WORKER_URL"
-    echo "  skit config set token <your-api-token>"
+    echo "  skify config set registry $WORKER_URL"
+    echo "  skify config set token <your-api-token>"
 fi

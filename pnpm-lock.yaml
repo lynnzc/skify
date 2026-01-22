@@ -17,7 +17,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@skit/core':
+      '@skify/core':
         specifier: workspace:*
         version: link:../core
       commander:
