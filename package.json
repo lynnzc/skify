@@ -1,0 +1,24 @@
+{
+  "name": "skit",
+  "version": "0.1.0",
+  "description": "Self-hosted Agent Skills Registry",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "cli": "pnpm --filter @skit/cli",
+    "worker": "pnpm --filter @skit/worker",
+    "web": "pnpm --filter @skit/web"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20.6.0"
+  }
+}

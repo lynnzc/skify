@@ -1,0 +1,17 @@
+name = "skit-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# Run: wrangler d1 create skit-db
+# Then paste the database_id below
+[[d1_databases]]
+binding = "DB"
+database_name = "skit-db"
+database_id = "ef9b1611-a541-43ef-8eca-c012fc36a8df"
+
+[[r2_buckets]]
+binding = "SKILLS"
+bucket_name = "skit-storage"
+
+[vars]
+GITHUB_API = "https://api.github.com"

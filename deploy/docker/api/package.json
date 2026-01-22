@@ -1,0 +1,16 @@
+{
+  "name": "skit-api-docker",
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.0",
+    "better-sqlite3": "^11.0.0",
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "tsx": "^4.0.0"
+  }
+}

@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.turbo/
+
+# Cloudflare
+.wrangler/
+.dev.vars
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+*.log
+
+# Skills directories (uncomment to commit, allowing team to share skills)
+.agent/
+.cursor/skills/
+.claude/skills/
+
+AGENTS.md
+
+.pnpm-store/
+
+# Lock file (uncomment to commit, locking skill versions for team)
+# skit.lock.json
+

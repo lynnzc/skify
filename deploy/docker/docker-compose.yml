@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: ../Dockerfile.api
+    ports:
+      - "8787:8787"
+    environment:
+      - API_TOKEN=${API_TOKEN}
+      - DATA_DIR=/data
+      - PORT=8787
+    volumes:
+      - skills-data:/data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8787
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  skills-data:
