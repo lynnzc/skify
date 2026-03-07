@@ -7,6 +7,7 @@ type Bindings = {
   SKILLS: R2Bucket;
   GITHUB_API: string;
   API_TOKEN?: string;
+  ALLOW_INSECURE_ADMIN?: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -17,7 +18,12 @@ app.get('/api/health', (c) => c.json({ status: 'ok' }));
 
 app.use('/api/admin/*', async (c, next) => {
   const token = c.env.API_TOKEN;
-  if (!token) return next();
+  if (!token) {
+    if (c.env.ALLOW_INSECURE_ADMIN === 'true') {
+      return next();
+    }
+    return c.json({ error: 'Admin API is disabled: API_TOKEN is not configured' }, 503);
+  }
   return bearerAuth({ token })(c, next);
 });
 

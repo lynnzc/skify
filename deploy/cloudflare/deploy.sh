@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Usage: ./deploy.sh [worker|web|all]
 #   worker - deploy Worker only
@@ -7,6 +7,7 @@ set -e
 #   all    - deploy everything (default)
 
 DEPLOY_TARGET="${1:-all}"
+WORKER_URL="${WORKER_URL:-}"
 
 echo "🚀 Deploying Skills Hub to Cloudflare..."
 
@@ -22,24 +23,38 @@ BUCKET_NAME="skify-storage"
 
 if [ "$DEPLOY_TARGET" = "all" ] || [ "$DEPLOY_TARGET" = "worker" ]; then
     echo "📦 Setting up D1 database..."
-    DB_OUTPUT=$(wrangler d1 create "$DB_NAME" 2>&1 || true)
-    if echo "$DB_OUTPUT" | grep -q "already exists"; then
-        echo "   Database already exists"
-        DB_ID=$(wrangler d1 info "$DB_NAME" 2>/dev/null | grep -oE '[0-9a-f-]{36}' | head -1 || echo "")
+    DB_OUTPUT=""
+    if DB_OUTPUT=$(wrangler d1 create "$DB_NAME" 2>&1); then
+        DB_ID=$(echo "$DB_OUTPUT" | grep -oE '[0-9a-f-]{36}' | head -1 || true)
+        if [ -n "${DB_ID:-}" ]; then
+            echo "   Created: $DB_ID"
+        fi
     else
-        DB_ID=$(echo "$DB_OUTPUT" | grep -oE '[0-9a-f-]{36}' | head -1)
-        echo "   Created: $DB_ID"
+        if echo "$DB_OUTPUT" | grep -qi "already exists"; then
+            echo "   Database already exists"
+            DB_ID=$(wrangler d1 info "$DB_NAME" 2>/dev/null | grep -oE '[0-9a-f-]{36}' | head -1 || true)
+        else
+            echo "❌ Failed to create D1 database:"
+            echo "$DB_OUTPUT"
+            exit 1
+        fi
     fi
 
     echo "📦 Setting up R2 bucket..."
-    R2_OUTPUT=$(wrangler r2 bucket create "$BUCKET_NAME" 2>&1 || true)
-    if echo "$R2_OUTPUT" | grep -q "already exists"; then
-        echo "   Bucket already exists"
-    else
+    R2_OUTPUT=""
+    if R2_OUTPUT=$(wrangler r2 bucket create "$BUCKET_NAME" 2>&1); then
         echo "   Created: $BUCKET_NAME"
+    else
+        if echo "$R2_OUTPUT" | grep -qi "already exists"; then
+            echo "   Bucket already exists"
+        else
+            echo "❌ Failed to create R2 bucket:"
+            echo "$R2_OUTPUT"
+            exit 1
+        fi
     fi
 
-    if [ -n "$DB_ID" ]; then
+    if [ -n "${DB_ID:-}" ]; then
         CURRENT_DB_ID=$(grep 'database_id' wrangler.toml | sed 's/.*database_id = "\([^"]*\)".*/\1/' || echo "")
         if [ "$CURRENT_DB_ID" != "$DB_ID" ]; then
             echo "🔧 Updating wrangler.toml with database_id: $DB_ID"
@@ -52,7 +67,7 @@ if [ "$DEPLOY_TARGET" = "all" ] || [ "$DEPLOY_TARGET" = "worker" ]; then
     fi
 
     echo "🗄️ Initializing database schema..."
-    wrangler d1 execute "$DB_NAME" --file=./schema.sql --remote 2>/dev/null || true
+    wrangler d1 execute "$DB_NAME" --file=./schema.sql --remote
 
     echo "🚀 Deploying Worker..."
     WORKER_OUTPUT=$(wrangler deploy 2>&1)
@@ -61,10 +76,15 @@ if [ "$DEPLOY_TARGET" = "all" ] || [ "$DEPLOY_TARGET" = "worker" ]; then
     if [ -z "$WORKER_URL" ]; then
         WORKER_URL=$(echo "$WORKER_OUTPUT" | grep -oE 'https://[^[:space:]]+\.workers\.dev' | head -1)
     fi
+
+    if [ -z "$WORKER_URL" ]; then
+        echo "❌ Could not detect Worker URL from deploy output."
+        exit 1
+    fi
 fi
 
-if [ "$DEPLOY_TARGET" = "web" ] && [ -z "$WORKER_URL" ]; then
-    echo "❌ Error: WORKER_URL is required when deploying web only"
+if { [ "$DEPLOY_TARGET" = "web" ] || [ "$DEPLOY_TARGET" = "all" ]; } && [ -z "$WORKER_URL" ]; then
+    echo "❌ Error: WORKER_URL is required for web deployment"
     echo ""
     echo "Usage: WORKER_URL=https://your-api.workers.dev ./deploy.sh web"
     echo "   or: ./deploy.sh all  (to deploy both worker and web)"
@@ -89,6 +109,20 @@ EOF
     rm -f .env.production
 fi
 
+if [ -n "$WORKER_URL" ]; then
+    echo "🏥 Running health check..."
+    if ! command -v curl &> /dev/null; then
+        echo "❌ curl is required for health checks. Please install curl and retry."
+        exit 1
+    fi
+    HEALTH_BODY=$(curl -fsS "$WORKER_URL/api/health")
+    if ! echo "$HEALTH_BODY" | grep -q '"status":"ok"'; then
+        echo "❌ Health check failed. Response: $HEALTH_BODY"
+        exit 1
+    fi
+    echo "   Health check passed"
+fi
+
 echo ""
 echo "✅ Deployment complete!"
 echo ""
@@ -96,7 +130,7 @@ echo ""
 if [ "$DEPLOY_TARGET" = "all" ] || [ "$DEPLOY_TARGET" = "worker" ]; then
     cd "$(dirname "$0")/../../packages/worker"
 
-    if [ -z "$SKIP_TOKEN" ]; then
+    if [ -z "${SKIP_TOKEN:-}" ]; then
         if wrangler secret list 2>/dev/null | grep -q "API_TOKEN"; then
             echo "🔑 API token already set"
         else
