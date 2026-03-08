@@ -1,15 +1,29 @@
 #!/bin/bash
 set -euo pipefail
 
-# Usage: ./deploy.sh [worker|web|all]
+# Usage: ./deploy.sh [worker|web|all] [personal|team]
 #   worker - deploy Worker only
 #   web    - deploy Web UI only
 #   all    - deploy everything (default)
+#   personal - smooth onboarding (anonymous read enabled, default)
+#   team     - strict mode (anonymous read disabled)
 
 DEPLOY_TARGET="${1:-all}"
+PROFILE="${2:-${SKIFY_PROFILE:-personal}}"
 WORKER_URL="${WORKER_URL:-}"
 
+if [ "$PROFILE" != "personal" ] && [ "$PROFILE" != "team" ]; then
+    echo "❌ Invalid profile: $PROFILE (expected personal or team)"
+    exit 1
+fi
+
+ALLOW_ANON_READ="true"
+if [ "$PROFILE" = "team" ]; then
+    ALLOW_ANON_READ="false"
+fi
+
 echo "🚀 Deploying Skills Hub to Cloudflare..."
+echo "👤 Profile: $PROFILE (ALLOW_ANONYMOUS_READ=$ALLOW_ANON_READ)"
 
 if ! command -v wrangler &> /dev/null; then
     echo "Installing wrangler..."
@@ -142,6 +156,9 @@ if [ "$DEPLOY_TARGET" = "all" ] || [ "$DEPLOY_TARGET" = "worker" ]; then
             echo "  $API_TOKEN"
         fi
     fi
+
+    echo "🔐 Setting ALLOW_ANONYMOUS_READ=$ALLOW_ANON_READ"
+    echo "$ALLOW_ANON_READ" | wrangler secret put ALLOW_ANONYMOUS_READ
 fi
 
 echo ""

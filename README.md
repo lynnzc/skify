@@ -18,11 +18,11 @@
 **skify** is a private skill registry you can deploy in minutes. Host your own skill packages for AI coding agents — keep proprietary workflows private, ensure team consistency, and maintain full control.
 
 ```bash
-# Deploy to Cloudflare (free tier)
-cd deploy/cloudflare && bash deploy.sh
+# Deploy to Cloudflare (personal profile, default)
+cd deploy/cloudflare && bash deploy.sh all personal
 
-# Or self-host with Docker
-cd deploy/docker && bash deploy.sh
+# Or self-host with Docker (team profile)
+cd deploy/docker && bash deploy.sh team
 ```
 
 ## Why skify?
@@ -58,7 +58,9 @@ Free tier, global edge, zero server management.
 
 ```bash
 cd deploy/cloudflare
-bash deploy.sh
+bash deploy.sh all personal
+# or strict team profile:
+# bash deploy.sh all team
 ```
 
 The script will:
@@ -77,7 +79,9 @@ Full control, runs anywhere, air-gapped support.
 
 ```bash
 cd deploy/docker
-bash deploy.sh
+bash deploy.sh personal
+# or strict team profile:
+# bash deploy.sh team
 ```
 
 Or with docker-compose:
@@ -112,7 +116,7 @@ skify config set token <admin-token>
 skify browse
 ```
 
-If you run enterprise mode (`ALLOW_ANONYMOUS_READ=false`), step 2 should include a read/admin token:
+If you run `team` profile (`ALLOW_ANONYMOUS_READ=false`), step 2 should include a read/admin token:
 
 ```bash
 curl -sS https://your-registry-url/api/skills \
@@ -129,10 +133,10 @@ skify supports role-based API tokens:
 
 Access behavior:
 
-- Default (`ALLOW_ANONYMOUS_READ` unset): anonymous read is enabled (smooth onboarding)
-- Enterprise mode: set `ALLOW_ANONYMOUS_READ=false` to require token for all read APIs
+- `personal` profile: anonymous read enabled (smooth onboarding)
+- `team` profile: anonymous read disabled (`ALLOW_ANONYMOUS_READ=false`)
 
-Quick start (default mode):
+Quick start (`personal`):
 
 ```bash
 # set registry/admin token for CLI
@@ -143,11 +147,13 @@ skify config set token <admin-token>
 skify publish ./my-skill
 ```
 
-Enterprise mode (strict):
+Strict mode (`team`):
 
 ```bash
-# server env
-ALLOW_ANONYMOUS_READ=false
+# deploy with team profile
+cd deploy/cloudflare && bash deploy.sh all team
+# or
+cd deploy/docker && bash deploy.sh team
 
 # create a read-only token for users/services
 skify token create team-read --permissions read

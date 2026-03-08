@@ -7,6 +7,7 @@ services:
       - "8787:8787"
     environment:
       - API_TOKEN=${API_TOKEN}
+      - ALLOW_ANONYMOUS_READ=${ALLOW_ANONYMOUS_READ}
       - DATA_DIR=/data
       - PORT=8787
     volumes:
