@@ -15,16 +15,35 @@ interface GitHubSearchResult {
   }>;
 }
 
-export async function searchSkillRepos(
-  query: string,
-  token?: string
-): Promise<SkillIndex[]> {
+interface GitHubRepoMeta {
+  default_branch?: string;
+}
+
+function buildHeaders(token?: string): HeadersInit {
   const headers: HeadersInit = {
     Accept: 'application/vnd.github.v3+json',
   };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
+  return headers;
+}
+
+async function getDefaultBranch(repo: string, token?: string): Promise<string> {
+  const headers = buildHeaders(token);
+  const res = await fetch(`${GITHUB_API}/repos/${repo}`, { headers });
+  if (!res.ok) {
+    return 'main';
+  }
+  const meta = (await res.json()) as GitHubRepoMeta;
+  return meta.default_branch || 'main';
+}
+
+export async function searchSkillRepos(
+  query: string,
+  token?: string
+): Promise<SkillIndex[]> {
+  const headers = buildHeaders(token);
 
   const url = `${GITHUB_API}/search/repositories?q=${encodeURIComponent(query)}+topic:${SKILLS_TOPIC}&sort=stars&per_page=50`;
   const res = await fetch(url, { headers });
@@ -52,12 +71,7 @@ export async function listSkillsInRepo(
   token?: string,
   skillsPath = 'skills'
 ): Promise<string[]> {
-  const headers: HeadersInit = {
-    Accept: 'application/vnd.github.v3+json',
-  };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+  const headers = buildHeaders(token);
 
   const effectivePath = skillsPath === '.' || skillsPath === '' ? '' : skillsPath;
   const url = effectivePath 
@@ -98,7 +112,8 @@ export async function getSkillContent(
   const path = skillName 
     ? (effectivePath ? `${effectivePath}/${skillName}/SKILL.md` : `${skillName}/SKILL.md`)
     : 'SKILL.md';
-  const rawUrl = `https://raw.githubusercontent.com/${repo}/main/${path}`;
+  const defaultBranch = await getDefaultBranch(repo, token);
+  const rawUrl = `https://raw.githubusercontent.com/${repo}/${defaultBranch}/${path}`;
 
   const headers: HeadersInit = {};
   if (token) {
@@ -107,11 +122,19 @@ export async function getSkillContent(
 
   const res = await fetch(rawUrl, { headers });
   if (!res.ok) {
-    const headRes = await fetch(rawUrl.replace('/main/', '/master/'), { headers });
-    if (!headRes.ok) {
+    const fallbackBranches = ['main', 'master'].filter((branch) => branch !== defaultBranch);
+    let fallbackRes: Response | null = null;
+    for (const branch of fallbackBranches) {
+      const candidate = await fetch(`https://raw.githubusercontent.com/${repo}/${branch}/${path}`, { headers });
+      if (candidate.ok) {
+        fallbackRes = candidate;
+        break;
+      }
+    }
+    if (!fallbackRes) {
       throw new Error(`SKILL.md not found in ${repo}/${path}`);
     }
-    const content = await headRes.text();
+    const content = await fallbackRes.text();
     const meta = parseSkillMd(content);
     return {
       ...meta,
@@ -143,12 +166,7 @@ export async function downloadSkillFiles(
     : '';
   const files: Record<string, string> = {};
 
-  const headers: HeadersInit = {
-    Accept: 'application/vnd.github.v3+json',
-  };
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+  const headers = buildHeaders(token);
 
   const textExtensions = ['.md', '.txt', '.json', '.yaml', '.yml', '.ts', '.js', '.py', '.sh', '.toml', '.xml', '.html', '.css'];
 

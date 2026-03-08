@@ -264,6 +264,9 @@ adminRoutes.post('/sync-github', requirePermission('admin'), async (c) => {
     Accept: 'application/vnd.github.v3+json',
     'User-Agent': 'skills-hub',
   };
+  const repoMetaRes = await fetch(`${c.env.GITHUB_API}/repos/${repo}`, { headers });
+  const repoMeta = repoMetaRes.ok ? ((await repoMetaRes.json()) as { default_branch?: string }) : null;
+  const defaultBranch = repoMeta?.default_branch || 'main';
 
   const listUrl = `${c.env.GITHUB_API}/repos/${repo}/contents/${path}`;
   const listRes = await fetch(listUrl, { headers });
@@ -277,7 +280,7 @@ adminRoutes.post('/sync-github', requirePermission('admin'), async (c) => {
 
   let synced = 0;
   for (const dir of skillDirs) {
-    const skillMdUrl = `https://raw.githubusercontent.com/${repo}/main/${path}/${dir.name}/SKILL.md`;
+    const skillMdUrl = `https://raw.githubusercontent.com/${repo}/${defaultBranch}/${path}/${dir.name}/SKILL.md`;
     const skillRes = await fetch(skillMdUrl);
     if (!skillRes.ok) continue;
 
