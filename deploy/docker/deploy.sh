@@ -31,7 +31,7 @@ export API_TOKEN
 export ALLOW_ANONYMOUS_READ
 
 echo "📦 Building and starting containers..."
-docker-compose up -d --build
+docker compose up -d --build
 
 echo ""
 echo "✅ Deployment complete!"
